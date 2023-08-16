@@ -1,0 +1,51 @@
+(herald "EKEDiffHell" (try-old-strands))
+(defprotocol EKEDiffHell diffie-hellman
+	(defrole init
+	    (vars (a name)(p skey)(x rndx) (y expt) (ca cb text))
+	    (trace
+			(send (cat a (enc (exp (gen) x) p)))
+			(recv (cat (enc (exp (gen) y) p) (enc cb (exp (gen) (mul x y)))))
+			(send (enc ca cb (exp (gen) (mul x y))))
+			(recv (enc ca (exp (gen) (mul x y))))
+	    )
+	(uniq-gen x)
+	)
+	
+	(defrole resp
+	    (vars (a name)(p skey)(y rndx)(x expt)(ca cb text))
+	    (trace
+	      (recv (cat a (enc (exp (gen) x) p)))
+		  (send (enc (exp (gen) y) p) (enc cb (exp (gen) (mul x y))))
+		  (recv (enc ca cb (exp (gen) (mul x y))))
+		  (send (enc ca (exp (gen) (mul x y))))
+	    )
+	(uniq-gen y)   
+	)
+)
+(defskeleton EKEDiffHell
+	(vars (a name)(cb text)(p skey))
+	(defstrand resp 4 (a a)(cb cb)(p p))
+	(non-orig p)
+	(uniq-orig cb)
+)
+(defskeleton EKEDiffHell
+	(vars (a name) (cb text)(p skey)(y rndx))
+	(defstrand resp 4 (a a)(cb cb)(p p)(y y))
+	(deflistener (exp (gen) y))
+	(non-orig p)
+	(uniq-orig cb)
+)
+(defskeleton EKEDiffHell
+	(vars (a name)(ca text)(p skey))
+	(defstrand init 4 (a a)(ca ca)(p p))
+	(non-orig p)
+	(uniq-orig ca)
+)
+
+(defskeleton EKEDiffHell
+	(vars (a name) (ca text)(p skey) (x rndx))
+	(defstrand init 4 (a a)(ca ca)(p p)(x x))
+	(deflistener (exp (gen) x))
+	(non-orig p)
+	(uniq-orig ca)
+)

@@ -1,0 +1,52 @@
+(herald "EKERsa")
+(comment "CPSA 3.6.11")
+(comment "All input read from EKERsa.txt")
+(defprotocol EKERsa basic
+	(defrole init
+	    (vars (a name) (e akey) (ca cb text) (p skey) (r skey))
+	    (trace
+			(send (cat a (enc e p)))
+			(recv (enc (enc r e) p))
+			(send (enc ca r))
+			(recv (enc ca cb r))
+			(send (enc cb r))
+	    )
+	(uniq-gen e)
+	)
+	(defrole resp
+		(vars (a name) (e akey) (ca cb text) (p skey) (r skey))
+		(trace
+			(recv (cat a (enc e p)))
+			(send (enc (enc r e) p))
+			(recv (enc ca r))
+			(send (enc ca cb r))
+			(recv (enc cb r))
+		)
+	)
+)
+(defskeleton EKERsa
+	(vars (a name)(cb text)(p skey))
+	(defstrand resp 5 (a a)(cb cb)(p p))
+	(non-orig p)
+	(uniq-orig cb)
+)
+(defskeleton EKERsa
+	(vars(a name)(cb text)(p skey)(r skey)(e akey))
+	(defstrand resp 5 (a a)(cb cb)(p p)(r r)(e e))
+	(deflistener (enc r e))
+	(non-orig p)
+	(uniq-orig cb)
+)
+(defskeleton EKERsa
+	(vars (a name)(ca text)(p skey))
+	(defstrand init 5 (a a)(ca ca)(p p))
+	(non-orig p)
+	(uniq-orig ca)
+)
+(defskeleton EKERsa
+	(vars (a name)(ca text)(p skey)(e akey))
+	(defstrand init 5 (a a)(ca ca)(p p)(e e))
+	(deflistener e)
+	(non-orig p)
+	(uniq-orig ca)
+)
